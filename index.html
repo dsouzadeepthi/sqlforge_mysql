@@ -1539,6 +1539,229 @@ function switchMode(mode) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════════════════
+function buildSidebar(filter = '') {
+  const list = document.getElementById('sidebar-list');
+  list.innerHTML = '';
+  const progress = getProgress();
+  const filterLow = filter.toLowerCase();
+
+  if (currentMode === 'patterns') {
+    const hdr = document.createElement('div');
+    hdr.className = 'sidebar-section-header';
+    hdr.innerHTML = '<span>Pattern Practice</span>';
+    list.appendChild(hdr);
+
+    PATTERNS.forEach(pat => {
+      const allQs = QUESTIONS.filter(q => q.pattern === pat.id);
+      const patQs = filter ? allQs.filter(q => q.title.toLowerCase().includes(filterLow)) : allQs;
+      if (patQs.length === 0 && filter) return;
+
+      const solved = allQs.filter(q => progress[q.id]?.status === 'solved').length;
+      const isDone = solved === allQs.length && allQs.length > 0;
+
+      const patEl = document.createElement('div');
+      patEl.className = 'pattern-header';
+      patEl.innerHTML = `
+        <span class="pattern-icon">${pat.icon}</span>
+        <span class="pattern-name">${pat.name}</span>
+        <span class="pattern-progress ${isDone ? 'done' : ''}">${solved}/${allQs.length}</span>
+      `;
+
+      const qList = document.createElement('div');
+      qList.className = 'pattern-questions';
+      if (filter || (currentQuestion && allQs.find(q => q.id === currentQuestion?.id))) {
+        qList.classList.add('open');
+      }
+      patEl.addEventListener('click', () => qList.classList.toggle('open'));
+
+      (filter ? patQs : allQs).forEach(q => {
+        qList.appendChild(makeQItem(q, progress[q.id]?.status));
+      });
+
+      list.appendChild(patEl);
+      list.appendChild(qList);
+    });
+
+  } else {
+    const hdr = document.createElement('div');
+    hdr.className = 'sidebar-section-header';
+    hdr.innerHTML = '<span>Mock Interview Questions</span>';
+    list.appendChild(hdr);
+
+    ['Easy', 'Medium', 'Hard'].forEach(diff => {
+      const qs = MOCK_QUESTIONS.filter(q => q.difficulty === diff &&
+        (!filter || q.title.toLowerCase().includes(filterLow) ||
+         (q.company || '').toLowerCase().includes(filterLow)));
+      if (qs.length === 0) return;
+
+      const diffEl = document.createElement('div');
+      diffEl.className = 'pattern-header';
+      diffEl.innerHTML = `
+        <span class="pattern-icon">${diff === 'Easy' ? '🟢' : diff === 'Medium' ? '🟡' : '🔴'}</span>
+        <span class="pattern-name">${diff}</span>
+        <span class="pattern-progress">${qs.filter(q => progress[q.id]?.status === 'solved').length}/${qs.length}</span>
+      `;
+
+      const qList = document.createElement('div');
+      qList.className = 'pattern-questions';
+      if (filter) qList.classList.add('open');
+      diffEl.addEventListener('click', () => qList.classList.toggle('open'));
+
+      qs.forEach(q => qList.appendChild(makeQItem(q, progress[q.id]?.status, true)));
+
+      list.appendChild(diffEl);
+      list.appendChild(qList);
+    });
+  }
+}
+
+function makeQItem(q, status, isMock = false) {
+  const el = document.createElement('div');
+  el.className = 'q-item' + (currentQuestion?.id === q.id ? ' active' : '');
+  el.dataset.qid = q.id;
+  const chip = isMock && q.company
+    ? `<span style="font-size:9px;color:var(--text-3);margin-right:2px">${q.company} · </span>`
+    : '';
+  el.innerHTML = `
+    <div class="q-status ${status === 'solved' ? 'solved' : status === 'attempted' ? 'attempted' : ''}"></div>
+    <span class="q-title">${chip}${q.title}</span>
+    <span class="q-diff ${q.difficulty}">${q.difficulty[0]}</span>
+  `;
+  el.addEventListener('click', () => loadQuestion(q));
+  return el;
+}
+
+function filterQuestions(val) {
+  buildSidebar(val);
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOAD QUESTION
+// ═══════════════════════════════════════════════════════════
+function loadQuestion(q) {
+  currentQuestion = q;
+
+  document.getElementById('welcome-screen').style.display = 'none';
+  document.getElementById('question-panel').style.display = 'flex';
+  document.getElementById('code-panel').style.display = 'flex';
+
+  document.querySelectorAll('.q-item').forEach(el =>
+    el.classList.toggle('active', parseInt(el.dataset.qid) === q.id));
+
+  const activeItem = document.querySelector(`.q-item[data-qid="${q.id}"]`);
+  if (activeItem) {
+    activeItem.closest('.pattern-questions')?.classList.add('open');
+    activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Reset to description tab
+  switchTab('description', null);
+  document.querySelectorAll('.panel-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+
+  renderDescription(q);
+
+  document.getElementById('tab-solution').innerHTML = `
+    <div style="margin-bottom:16px">
+      <div class="schema-title">Reference Solution</div>
+      <pre class="solution-block">${escHtml(q.solution)}</pre>
+    </div>
+    <div style="font-size:11px;color:var(--text-3)">⚠️ Try solving it yourself first!</div>
+  `;
+
+  document.getElementById('notes-editor').value = getNotes(q.id);
+  document.getElementById('notes-editor').oninput = () => setNotes(q.id, document.getElementById('notes-editor').value);
+
+  const saved = getProgress()[q.id];
+  document.getElementById('code-editor').value = saved?.code || '';
+  resetResults();
+  initDB(q);
+}
+
+function renderDescription(q) {
+  const isMock = !!q.company;
+  const pat = !isMock ? PATTERNS.find(p => p.id === q.pattern) : null;
+  const patternBadge = pat
+    ? `<span class="pattern-badge">${pat.icon} ${pat.name}</span>`
+    : `<span class="pattern-badge">${q.topic || ''}</span>`;
+  const companyBadge = isMock ? `<span class="company-badge">🏢 ${q.company}</span>` : '';
+  const qNum = isMock ? `Mock #${q.id - 100}` : `P${q.pattern} · Q${(q.id % 5) || 5}`;
+
+  const tablesParsed = parseSchema(q.schema);
+  const tablesHtml = tablesParsed.map(t => renderTablePreview(t)).join('');
+
+  document.getElementById('tab-description').innerHTML = `
+    <div class="q-header fade-in">
+      <div class="q-meta">
+        <span class="q-num">${qNum}</span>
+        <span class="diff-badge ${q.difficulty}">${q.difficulty}</span>
+        ${companyBadge}${patternBadge}
+      </div>
+      <div class="q-title-main">${q.title}</div>
+    </div>
+    <div class="q-description fade-in">${q.description.replace(/\\n/g, '<br>')}</div>
+    <div class="schema-section fade-in">
+      <div class="schema-title">Sample Data</div>
+      ${tablesHtml}
+    </div>
+    <div class="hint-section fade-in">
+      <div class="hint-toggle" onclick="toggleHint(this)">💡 <span>Show Hint</span></div>
+      <div class="hint-content">${q.hint}</div>
+    </div>
+  `;
+}
+
+function parseSchema(schema) {
+  const tables = [];
+  const createRe = /CREATE TABLE (?:IF NOT EXISTS )?(\w+)\s*\(([^;]+)\);/gi;
+  const insertRe = /INSERT INTO (\w+)[^(]*VALUES\s*([\s\S]+?);/gi;
+  let m;
+  while ((m = createRe.exec(schema)) !== null) {
+    const cols = m[2].split(',').map(c => c.trim().split(/\s+/)[0]).filter(c => c && !c.match(/^(PRIMARY|KEY|UNIQUE|INDEX|CONSTRAINT)/i));
+    tables.push({ name: m[1], cols, rows: [] });
+  }
+  while ((m = insertRe.exec(schema)) !== null) {
+    const tbl = tables.find(t => t.name.toLowerCase() === m[1].toLowerCase());
+    if (!tbl) continue;
+    const tupleRe = /\(([^)]+)\)/g;
+    let tm;
+    while ((tm = tupleRe.exec(m[2])) !== null) {
+      const vals = tm[1].split(',').map(v => v.trim().replace(/^'|'$/g, ''));
+      tbl.rows.push(vals);
+    }
+  }
+  return tables;
+}
+
+function renderTablePreview(t) {
+  const maxRows = 6;
+  const shown = t.rows.slice(0, maxRows);
+  const more = t.rows.length > maxRows
+    ? `<tr><td colspan="${t.cols.length}" style="color:var(--text-3);font-style:italic;padding:5px 12px">… ${t.rows.length - maxRows} more rows</td></tr>`
+    : '';
+  return `
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;color:var(--cyan);margin-bottom:5px;font-weight:600">${t.name}</div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr>${t.cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${shown.map(r => `<tr>${r.map(v => `<td>${escHtml(String(v))}</td>`).join('')}</tr>`).join('')}
+            ${more}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function toggleHint(el) {
+  const content = el.nextElementSibling;
+  content.classList.toggle('visible');
+  el.querySelector('span').textContent = content.classList.contains('visible') ? 'Hide Hint' : 'Show Hint';
+}
+
+// ═══════════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════════
 function switchTab(name, clickedEl) {
