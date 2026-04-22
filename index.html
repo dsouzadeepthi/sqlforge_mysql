@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQLForge — SQL Interview Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════
+   DESIGN SYSTEM — Terminal Dark + Forge Amber
+   ═══════════════════════════════════════ */
+:root {
+  --bg-0: #0d0e0f;
+  --bg-1: #141618;
+  --bg-2: #1b1e21;
+  --bg-3: #232729;
+  --bg-4: #2c3136;
+  --line: #2e3338;
+  --text-0: #f0f2f4;
+  --text-1: #c0c8d2;
+  --text-2: #7a8694;
+  --text-3: #4a5568;
+  --amber: #f5a623;
+  --amber-dim: #c4831c;
+  --amber-glow: rgba(245,166,35,0.12);
+  --cyan: #4ecdc4;
+  --cyan-dim: #3aaba3;
+  --cyan-glow: rgba(78,205,196,0.1);
+  --green: #6bcb77;
+  --red: #ff6b6b;
+  --purple: #c9b1ff;
+  --easy: #6bcb77;
+  --medium: #f5a623;
+  --hard: #ff6b6b;
+  --radius: 6px;
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════
+   LAYOUT
+   ═══════════════════════════════════════ */
+#app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  grid-template-rows: 48px 1fr;
+  height: 100vh;
+}
+
+/* ═══════════════════════════════════════
+   TOPBAR
+   ═══════════════════════════════════════ */
+#topbar {
+  grid-column: 1 / -1;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 24px;
+  position: relative;
+  z-index: 50;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--amber);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--text-0);
+  letter-spacing: -0.5px;
+}
+
+.logo-text span { color: var(--amber); }
+
+.top-nav {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.top-nav button {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.top-nav button:hover { background: var(--bg-3); color: var(--text-0); }
+.top-nav button.active { background: var(--amber-glow); color: var(--amber); }
+
+.top-spacer { flex: 1; }
+
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-label {
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.progress-track {
+  width: 120px;
+  height: 4px;
+  background: var(--bg-4);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber), var(--cyan));
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.stats-chip {
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--text-1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stats-chip .num { color: var(--amber); font-weight: 600; }
+
+/* ═══════════════════════════════════════
+   SIDEBAR
+   ═══════════════════════════════════════ */
+#sidebar {
+  background: var(--bg-1);
+  border-right: 1px solid var(--line);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-search {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+
+.sidebar-search input {
+  width: 100%;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 7px 10px 7px 32px;
+  color: var(--text-0);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.sidebar-search input:focus { border-color: var(--amber); }
+.sidebar-search input::placeholder { color: var(--text-3); }
+
+.search-icon {
+  position: absolute;
+  left: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+#sidebar-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px 0;
+}
+
+#sidebar-list::-webkit-scrollbar { width: 4px; }
+#sidebar-list::-webkit-scrollbar-track { background: transparent; }
+#sidebar-list::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 2px; }
+
+.sidebar-section-header {
+  padding: 10px 14px 6px;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sidebar-section-header:hover { color: var(--text-2); }
+
+.section-toggle {
+  font-size: 8px;
+  transition: transform 0.2s;
+}
+
+.pattern-header {
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  margin: 1px 6px;
+  transition: background 0.1s;
+}
+
+.pattern-header:hover { background: var(--bg-3); }
+
+.pattern-icon { font-size: 12px; width: 18px; text-align: center; }
+.pattern-name {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-1);
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.pattern-progress {
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+.pattern-progress.done { color: var(--green); }
+
+.pattern-questions { display: none; }
+.pattern-questions.open { display: block; }
+
+.q-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 42px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 1px 6px;
+  transition: background 0.1s;
+  position: relative;
+}
+
+.q-item:hover { background: var(--bg-3); }
+
+.q-item.active {
+  background: var(--amber-glow);
+}
+
+.q-item.active .q-title { color: var(--amber); }
+
+.q-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-3);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.q-status.solved {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.q-status.attempted {
+  background: var(--amber);
+  border-color: var(--amber);
+}
+
+.q-title {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.q-diff {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.q-diff.Easy { color: var(--easy); }
+.q-diff.Medium { color: var(--medium); }
+.q-diff.Hard { color: var(--hard); }
+
+/* ═══════════════════════════════════════
+   MAIN AREA
+   ═══════════════════════════════════════ */
+#main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════
+   QUESTION PANEL
+   ═══════════════════════════════════════ */
+#question-panel {
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-1);
+  flex-shrink: 0;
+}
+
+.panel-tab {
+  padding: 10px 16px;
+  font-size: 11px;
+  color: var(--text-2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  font-family: var(--font-mono);
+}
+
+.panel-tab:hover { color: var(--text-0); }
+.panel-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.panel-content::-webkit-scrollbar { width: 4px; }
+.panel-content::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 2px; }
+
+/* Question Header */
+.q-header {
+  margin-bottom: 20px;
+}
+
+.q-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.q-num {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.diff-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.diff-badge.Easy { background: rgba(107,203,119,0.1); color: var(--easy); border: 1px solid rgba(107,203,119,0.2); }
+.diff-badge.Medium { background: rgba(245,166,35,0.1); color: var(--medium); border: 1px solid rgba(245,166,35,0.2); }
+.diff-badge.Hard { background: rgba(255,107,107,0.1); color: var(--hard); border: 1px solid rgba(255,107,107,0.2); }
+
+.company-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--bg-3);
+  color: var(--text-2);
+  border: 1px solid var(--line);
+}
+
+.pattern-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--cyan-glow);
+  color: var(--cyan);
+  border: 1px solid rgba(78,205,196,0.2);
+}
+
+.q-title-main {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-0);
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+/* Description */
+.q-description {
+  font-size: 13px;
+  color: var(--text-1);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.q-description code {
+  background: var(--bg-3);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.q-description strong { color: var(--text-0); }
+
+/* Table Preview */
+.schema-section {
+  margin-bottom: 20px;
+}
+
+.schema-title {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+}
+
+.table-wrapper::-webkit-scrollbar { height: 4px; }
+.table-wrapper::-webkit-scrollbar-thumb { background: var(--bg-4); }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.data-table th {
+  background: var(--bg-3);
+  color: var(--amber);
+  padding: 7px 12px;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+
+.data-table td {
+  padding: 6px 12px;
+  color: var(--text-1);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--bg-3); }
+
+/* Hint */
+.hint-section {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--amber);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.hint-toggle {
+  font-size: 11px;
+  color: var(--amber);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.hint-content {
+  font-size: 12px;
+  color: var(--text-1);
+  margin-top: 8px;
+  display: none;
+  line-height: 1.6;
+}
+
+.hint-content.visible { display: block; }
+
+/* Solution tab */
+.solution-block {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-1);
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════
+   CODE PANEL
+   ═══════════════════════════════════════ */
+#code-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-0);
+}
+
+.code-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--line);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.code-toolbar-label {
+  font-size: 11px;
+  color: var(--text-2);
+  flex: 1;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.btn-ghost {
+  background: var(--bg-3);
+  color: var(--text-1);
+  border: 1px solid var(--line);
+}
+
+.btn-ghost:hover { background: var(--bg-4); color: var(--text-0); }
+
+.btn-run {
+  background: var(--bg-3);
+  color: var(--cyan);
+  border: 1px solid rgba(78,205,196,0.3);
+}
+
+.btn-run:hover { background: var(--cyan-glow); }
+
+.btn-submit {
+  background: var(--amber);
+  color: var(--bg-0);
+  border: none;
+}
+
+.btn-submit:hover { background: var(--amber-dim); }
+.btn-submit:active { transform: scale(0.97); }
+
+/* Editor */
+#editor-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+#code-editor {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-0);
+  color: var(--text-0);
+  border: none;
+  outline: none;
+  padding: 20px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.8;
+  resize: none;
+  caret-color: var(--amber);
+  tab-size: 2;
+}
+
+#code-editor::selection { background: rgba(245,166,35,0.2); }
+
+/* Results panel */
+#results-panel {
+  height: 220px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.results-header {
+  padding: 8px 16px;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.results-label {
+  font-size: 11px;
+  color: var(--text-2);
+  flex: 1;
+}
+
+.result-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  display: none;
+}
+
+.result-badge.pass { display: inline; background: rgba(107,203,119,0.1); color: var(--green); border: 1px solid rgba(107,203,119,0.2); }
+.result-badge.fail { display: inline; background: rgba(255,107,107,0.1); color: var(--red); border: 1px solid rgba(255,107,107,0.2); }
+.result-badge.error { display: inline; background: rgba(201,177,255,0.1); color: var(--purple); border: 1px solid rgba(201,177,255,0.2); }
+
+.results-body {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 16px;
+}
+
+.results-body::-webkit-scrollbar { width: 4px; height: 4px; }
+.results-body::-webkit-scrollbar-thumb { background: var(--bg-4); }
+
+.results-empty {
+  color: var(--text-3);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+}
+
+.results-error {
+  color: var(--red);
+  font-size: 12px;
+  line-height: 1.6;
+  font-family: var(--font-mono);
+}
+
+.results-success {
+  color: var(--green);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.results-table-wrap {
+  overflow-x: auto;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.results-table th {
+  background: var(--bg-3);
+  color: var(--amber);
+  padding: 5px 10px;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+}
+
+.results-table td {
+  padding: 5px 10px;
+  color: var(--text-1);
+  border-bottom: 1px solid var(--bg-3);
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.results-table tbody tr:hover { background: var(--bg-2); }
+
+.exec-time {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 6px;
+}
+
+/* ═══════════════════════════════════════
+   WELCOME SCREEN
+   ═══════════════════════════════════════ */
+#welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 40px;
+  grid-column: 2;
+}
+
+.welcome-logo {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--text-0);
+  margin-bottom: 8px;
+  letter-spacing: -2px;
+}
+
+.welcome-logo span { color: var(--amber); }
+
+.welcome-sub {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.welcome-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  max-width: 600px;
+  margin-bottom: 32px;
+}
+
+.welcome-card {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: left;
+  transition: border-color 0.2s;
+}
+
+.welcome-card:hover { border-color: var(--amber); }
+
+.welcome-card-icon { font-size: 24px; margin-bottom: 8px; }
+.welcome-card-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text-0); margin-bottom: 4px; }
+.welcome-card-desc { font-size: 11px; color: var(--text-2); line-height: 1.5; }
+
+.welcome-hint {
+  font-size: 12px;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ═══════════════════════════════════════
+   TOAST NOTIFICATION
+   ═══════════════════════════════════════ */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  font-size: 12px;
+  color: var(--text-0);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s;
+  pointer-events: none;
+  z-index: 100;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#toast.success { border-color: rgba(107,203,119,0.4); }
+#toast.error-toast { border-color: rgba(255,107,107,0.4); }
+
+/* ═══════════════════════════════════════
+   RESIZE HANDLE (between editor + results)
+   ═══════════════════════════════════════ */
+.resize-handle {
+  height: 4px;
+  background: var(--line);
+  cursor: ns-resize;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.resize-handle:hover { background: var(--amber); }
+
+/* ═══════════════════════════════════════
+   SCROLLBAR GLOBAL
+   ═══════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-1); }
+::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* ═══════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in { animation: fadeIn 0.2s ease forwards; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 12px; height: 12px;
+  border: 2px solid var(--bg-4);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+/* Loading overlay */
+#loading-overlay {
+  position: fixed; inset: 0;
+  background: var(--bg-0);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 200;
+  transition: opacity 0.5s;
+}
+
+.loading-logo {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text-0);
+  letter-spacing: -1px;
+  margin-bottom: 24px;
+}
+
+.loading-logo span { color: var(--amber); }
+
+.loading-bar-track {
+  width: 200px; height: 3px;
+  background: var(--bg-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber), var(--cyan));
+  border-radius: 2px;
+  width: 0;
+  transition: width 0.4s ease;
+}
+
+.loading-status {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* Keyboard shortcut badge */
+.kbd {
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 10px;
+  color: var(--text-2);
+}
+
+/* Pattern section in sidebar for mock */
+.mock-section { margin-top: 8px; }
+
+/* Tab hidden */
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loading-overlay">
+  <div class="loading-logo">SQL<span>Forge</span></div>
+  <div class="loading-bar-track">
+    <div class="loading-bar-fill" id="loading-bar"></div>
+  </div>
+  <div class="loading-status" id="loading-status">Initializing SQL engine...</div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- App -->
+<div id="app">
+  <!-- Topbar -->
+  <div id="topbar">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <span class="logo-text">SQL<span>Forge</span></span>
+    </div>
+
+    <div class="top-nav">
+      <button id="btn-patterns" class="active" onclick="switchMode('patterns')">📚 Patterns (100)</button>
+      <button id="btn-mock" onclick="switchMode('mock')">🎯 Mock Interview (100)</button>
+    </div>
+
+    <div class="top-spacer"></div>
+
+    <div class="progress-bar-container">
+      <span class="progress-label">Progress</span>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="stats-chip">
+      <span>Solved</span>
+      <span class="num" id="solved-count">0</span>
+      <span>/ <span id="total-count">200</span></span>
+    </div>
+
+    <div class="stats-chip">
+      <span>🔥 Streak</span>
+      <span class="num" id="streak-count">0</span>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-search">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Search questions..." oninput="filterQuestions(this.value)">
+    </div>
+    <div id="sidebar-list"></div>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Welcome screen -->
+    <div id="welcome-screen">
+      <div class="welcome-logo">SQL<span>Forge</span></div>
+      <p class="welcome-sub">Master SQL interview patterns through deliberate practice.<br>200 questions across 20 patterns + 100 mock interviews.</p>
+      <div class="welcome-grid">
+        <div class="welcome-card">
+          <div class="welcome-card-icon">🧠</div>
+          <div class="welcome-card-title">20 Patterns</div>
+          <div class="welcome-card-desc">5 questions each, from Easy to Hard</div>
+        </div>
+        <div class="welcome-card">
+          <div class="welcome-card-icon">🎯</div>
+          <div class="welcome-card-title">Mock Interviews</div>
+          <div class="welcome-card-desc">Real company-style questions</div>
+        </div>
+        <div class="welcome-card">
+          <div class="welcome-card-icon">⚡</div>
+          <div class="welcome-card-title">Live SQL Engine</div>
+          <div class="welcome-card-desc">Run & test queries in the browser</div>
+        </div>
+      </div>
+      <p class="welcome-hint">← Select a question from the sidebar to begin</p>
+    </div>
+
+    <!-- Question panel (hidden until question selected) -->
+    <div id="question-panel" style="display:none">
+      <div class="panel-tabs">
+        <div class="panel-tab active" onclick="switchTab('description', this)">Description</div>
+        <div class="panel-tab" onclick="switchTab('solution', this)">Solution</div>
+        <div class="panel-tab" onclick="switchTab('notes', this)">My Notes</div>
+      </div>
+
+      <div class="panel-content" id="tab-description">
+        <!-- Filled by JS -->
+      </div>
+      <div class="panel-content tab-pane" id="tab-solution">
+        <!-- Filled by JS -->
+      </div>
+      <div class="panel-content tab-pane" id="tab-notes">
+        <textarea id="notes-editor" style="width:100%;height:calc(100vh - 160px);background:transparent;border:none;outline:none;color:var(--text-1);font-family:var(--font-mono);font-size:12px;line-height:1.8;resize:none;" placeholder="Write your notes here...&#10;&#10;Tips, observations, edge cases..."></textarea>
+      </div>
+    </div>
+
+    <!-- Code panel -->
+    <div id="code-panel" style="display:none">
+      <div class="code-toolbar">
+        <span class="code-toolbar-label">SQL Editor &nbsp;<span class="kbd">Ctrl+Enter</span> to run</span>
+        <button class="btn btn-ghost" onclick="resetEditor()">↺ Reset</button>
+        <button class="btn btn-run" id="run-btn" onclick="runQuery()">▶ Run</button>
+        <button class="btn btn-submit" onclick="submitSolution()">✓ Submit</button>
+      </div>
+
+      <div id="editor-container">
+        <textarea id="code-editor" spellcheck="false" placeholder="-- Write your SQL query here&#10;SELECT ..."></textarea>
+      </div>
+
+      <div id="results-panel">
+        <div class="results-header">
+          <span class="results-label" id="results-label">Output</span>
+          <span class="result-badge" id="result-badge"></span>
+        </div>
+        <div class="results-body" id="results-body">
+          <div class="results-empty">▷ Run your query to see results</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AlaSQL — MySQL-compatible in-browser SQL engine -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.3.0/alasql.min.js"></script>
+
+
+<!-- Questions data — your 200 questions live here -->
+<script src="questions.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let currentQuestion = null;
+let currentMode = 'patterns'; // 'patterns' | 'mock'
+let currentDbName = null;     // AlaSQL database name for current question
+
+// ─── Persistent state via localStorage ─────────────────────
+function loadState() {
+  try { return JSON.parse(localStorage.getItem('sqlforge_state') || '{}'); }
+  catch { return {}; }
+}
+
+function saveState(state) {
+  localStorage.setItem('sqlforge_state', JSON.stringify(state));
+}
+
+function getProgress() {
+  return loadState().progress || {};
+}
+
+function setProgress(qId, status, code) {
+  const s = loadState();
+  if (!s.progress) s.progress = {};
+  s.progress[qId] = { status, code, ts: Date.now() };
+  saveState(s);
+}
+
+function getNotes(qId) {
+  return (loadState().notes || {})[qId] || '';
+}
+
+function setNotes(qId, text) {
+  const s = loadState();
+  if (!s.notes) s.notes = {};
+  s.notes[qId] = text;
+  saveState(s);
+}
+
+function getStreak() {
+  const s = loadState();
+  const today = new Date().toDateString();
+  const lastDay = s.lastSolveDay;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (!lastDay) return 0;
+  if (lastDay === today) return s.streak || 0;
+  if (lastDay === yesterday) return s.streak || 0;
+  return 0; // streak broken
+}
+
+function bumpStreak() {
+  const s = loadState();
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (s.lastSolveDay === today) return; // already counted today
+  if (s.lastSolveDay === yesterday) {
+    s.streak = (s.streak || 0) + 1;
+  } else {
+    s.streak = 1; // reset
+  }
+  s.lastSolveDay = today;
+  saveState(s);
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT — AlaSQL needs no async loading (pure JS, no WASM)
+// ═══════════════════════════════════════════════════════════
+async function initSQL() {
+  const bar = document.getElementById('loading-bar');
+  const status = document.getElementById('loading-status');
+
+  try {
+    status.textContent = 'Loading MySQL engine...';
+    bar.style.width = '30%';
+    await new Promise(r => setTimeout(r, 100));
+
+    // Verify AlaSQL loaded
+    if (typeof alasql === 'undefined') throw new Error('AlaSQL failed to load');
+
+    // Configure AlaSQL for MySQL-compatible behaviour
+    alasql.options.errorlog = false;
+    alasql.options.casesensitive = false;
+
+    bar.style.width = '70%';
+    status.textContent = 'Preparing questions...';
+    await new Promise(r => setTimeout(r, 150));
+
+    bar.style.width = '100%';
+    status.textContent = 'Ready!';
+    await new Promise(r => setTimeout(r, 300));
+
+    document.getElementById('loading-overlay').style.opacity = '0';
+    setTimeout(() => {
+      document.getElementById('loading-overlay').style.display = 'none';
+    }, 500);
+
+    buildSidebar();
+    updateStats();
+
+  } catch (err) {
+    status.textContent = 'Error: ' + err.message;
+    bar.style.background = 'var(--red)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════════════════
+function buildSidebar(filter = '') {
+  const list = document.getElementById('sidebar-list');
+  list.innerHTML = '';
+  const progress = getProgress();
+  const filterLow = filter.toLowerCase();
+
+  if (currentMode === 'patterns') {
+    // Section header
+    const hdr = document.createElement('div');
+    hdr.className = 'sidebar-section-header';
+    hdr.innerHTML = '<span>Pattern Practice</span>';
+    list.appendChild(hdr);
+
+    PATTERNS.forEach(pat => {
+      const patQs = QUESTIONS.filter(q => q.pattern === pat.id &&
+        (!filter || q.title.toLowerCase().includes(filterLow)));
+      if (patQs.length === 0 && filter) return;
+
+      const allQs = QUESTIONS.filter(q => q.pattern === pat.id);
+      const solved = allQs.filter(q => progress[q.id]?.status === 'solved').length;
+      const isDone = solved === allQs.length;
+
+      const patEl = document.createElement('div');
+      patEl.className = 'pattern-header';
+      patEl.innerHTML = `
+        <span class="pattern-icon">${pat.icon}</span>
+        <span class="pattern-name">${pat.name}</span>
+        <span class="pattern-progress ${isDone ? 'done' : ''}">${solved}/${allQs.length}</span>
+      `;
+
+      const qList = document.createElement('div');
+      qList.className = 'pattern-questions';
+      // Auto-open if has active question or filter
+      if (filter || (currentQuestion && allQs.find(q => q.id === currentQuestion.id))) {
+        qList.classList.add('open');
+      }
+
+      patEl.addEventListener('click', () => {
+        qList.classList.toggle('open');
+      });
+
+      (filter ? patQs : allQs).forEach(q => {
+        const st = progress[q.id]?.status;
+        qList.appendChild(makeQItem(q, st));
+      });
+
+      list.appendChild(patEl);
+      list.appendChild(qList);
+    });
+
+  } else {
+    // Mock mode
+    const hdr = document.createElement('div');
+    hdr.className = 'sidebar-section-header';
+    hdr.innerHTML = '<span>Mock Interview Questions</span>';
+    list.appendChild(hdr);
+
+    const diffs = ['Easy', 'Medium', 'Hard'];
+    diffs.forEach(diff => {
+      const qs = MOCK_QUESTIONS.filter(q => q.difficulty === diff &&
+        (!filter || q.title.toLowerCase().includes(filterLow) ||
+         (q.company || '').toLowerCase().includes(filterLow)));
+      if (qs.length === 0) return;
+
+      const diffEl = document.createElement('div');
+      diffEl.className = 'pattern-header';
+      diffEl.innerHTML = `
+        <span class="pattern-icon">${diff === 'Easy' ? '🟢' : diff === 'Medium' ? '🟡' : '🔴'}</span>
+        <span class="pattern-name">${diff}</span>
+        <span class="pattern-progress">${qs.filter(q => progress[q.id]?.status === 'solved').length}/${qs.length}</span>
+      `;
+
+      const qList = document.createElement('div');
+      qList.className = 'pattern-questions';
+      if (filter) qList.classList.add('open');
+
+      diffEl.addEventListener('click', () => qList.classList.toggle('open'));
+
+      qs.forEach(q => {
+        const st = progress[q.id]?.status;
+        qList.appendChild(makeQItem(q, st, true));
+      });
+
+      list.appendChild(diffEl);
+      list.appendChild(qList);
+    });
+  }
+}
+
+function makeQItem(q, status, isMock = false) {
+  const el = document.createElement('div');
+  el.className = 'q-item' + (currentQuestion?.id === q.id ? ' active' : '');
+  el.dataset.qid = q.id;
+
+  const chip = isMock && q.company
+    ? `<span style="font-size:9px;color:var(--text-3);margin-right:2px">${q.company}</span>`
+    : '';
+
+  el.innerHTML = `
+    <div class="q-status ${status === 'solved' ? 'solved' : status === 'attempted' ? 'attempted' : ''}"></div>
+    <span class="q-title">${chip}${q.title}</span>
+    <span class="q-diff ${q.difficulty}">${q.difficulty[0]}</span>
+  `;
+  el.addEventListener('click', () => loadQuestion(q));
+  return el;
+}
+
+function filterQuestions(val) {
+  buildSidebar(val);
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOAD QUESTION
+// ═══════════════════════════════════════════════════════════
+function loadQuestion(q) {
+  currentQuestion = q;
+
+  // Show panels
+  document.getElementById('welcome-screen').style.display = 'none';
+  document.getElementById('question-panel').style.display = 'flex';
+  document.getElementById('code-panel').style.display = 'flex';
+
+  // Highlight active in sidebar
+  document.querySelectorAll('.q-item').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.qid) === q.id);
+  });
+
+  // Ensure parent pattern/diff section is open
+  const activeItem = document.querySelector(`.q-item[data-qid="${q.id}"]`);
+  if (activeItem) {
+    const parent = activeItem.closest('.pattern-questions');
+    if (parent) parent.classList.add('open');
+    activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Reset tabs
+  switchTab('description', document.querySelector('.panel-tab'));
+  document.querySelectorAll('.panel-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+
+  // Build description
+  renderDescription(q);
+
+  // Build solution tab
+  document.getElementById('tab-solution').innerHTML = `
+    <div style="margin-bottom:16px">
+      <div class="schema-title">Reference Solution</div>
+      <pre class="solution-block">${escHtml(q.solution)}</pre>
+    </div>
+    <div style="font-size:11px;color:var(--text-3)">
+      ⚠️ Try solving it yourself first before checking!
+    </div>
+  `;
+
+  // Restore notes
+  document.getElementById('notes-editor').value = getNotes(q.id);
+  document.getElementById('notes-editor').oninput = () => setNotes(q.id, document.getElementById('notes-editor').value);
+
+  // Restore or blank editor
+  const saved = getProgress()[q.id];
+  const editor = document.getElementById('code-editor');
+  editor.value = saved?.code || '';
+
+  // Clear results
+  resetResults();
+
+  // Init fresh DB for this question
+  initDB(q);
+}
+
+function renderDescription(q) {
+  const isMock = !!q.company;
+  const patternBadge = !isMock
+    ? `<span class="pattern-badge">${PATTERNS.find(p => p.id === q.pattern)?.icon} ${PATTERNS.find(p => p.id === q.pattern)?.name}</span>`
+    : `<span class="pattern-badge">${q.topic || ''}</span>`;
+
+  const companyBadge = isMock
+    ? `<span class="company-badge">🏢 ${q.company}</span>`
+    : '';
+
+  const qNum = isMock
+    ? `Mock #${q.id - 100}`
+    : `P${q.pattern} · Q${(q.id % 5) || 5}`;
+
+  // Parse schema to render preview tables
+  const tablesParsed = parseSchema(q.schema);
+  const tablesHtml = tablesParsed.map(t => renderTablePreview(t)).join('');
+
+  document.getElementById('tab-description').innerHTML = `
+    <div class="q-header fade-in">
+      <div class="q-meta">
+        <span class="q-num">${qNum}</span>
+        <span class="diff-badge ${q.difficulty}">${q.difficulty}</span>
+        ${companyBadge}
+        ${patternBadge}
+      </div>
+      <div class="q-title-main">${q.title}</div>
+    </div>
+
+    <div class="q-description fade-in">${q.description.replace(/\\n/g, '<br>')}</div>
+
+    <div class="schema-section fade-in">
+      <div class="schema-title">Sample Data</div>
+      ${tablesHtml}
+    </div>
+
+    <div class="hint-section fade-in">
+      <div class="hint-toggle" onclick="toggleHint(this)">
+        💡 <span>Show Hint</span>
+      </div>
+      <div class="hint-content">${q.hint}</div>
+    </div>
+  `;
+}
+
+function parseSchema(schema) {
+  const tables = [];
+  const createRe = /CREATE TABLE (\w+)\s*\(([^;]+)\);/g;
+  const insertRe = /INSERT INTO (\w+) VALUES\s*([\s\S]+?);/g;
+
+  let m;
+  while ((m = createRe.exec(schema)) !== null) {
+    const name = m[1];
+    const cols = m[2].split(',').map(c => c.trim().split(/\s+/)[0]);
+    tables.push({ name, cols, rows: [] });
+  }
+
+  while ((m = insertRe.exec(schema)) !== null) {
+    const tbl = tables.find(t => t.name === m[1]);
+    if (!tbl) continue;
+    // Extract value tuples
+    const tupleRe = /\(([^)]+)\)/g;
+    let tm;
+    while ((tm = tupleRe.exec(m[2])) !== null) {
+      const vals = tm[1].split(',').map(v => v.trim().replace(/^'|'$/g, ''));
+      tbl.rows.push(vals);
+    }
+  }
+  return tables;
+}
+
+function renderTablePreview(t) {
+  const maxRows = 6;
+  const shown = t.rows.slice(0, maxRows);
+  const more = t.rows.length > maxRows ? `<tr><td colspan="${t.cols.length}" style="color:var(--text-3);font-style:italic;padding:5px 12px">... ${t.rows.length - maxRows} more rows</td></tr>` : '';
+
+  return `
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;color:var(--cyan);margin-bottom:5px;font-weight:600">${t.name}</div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr>${t.cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${shown.map(r => `<tr>${r.map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}
+            ${more}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function toggleHint(el) {
+  const content = el.nextElementSibling;
+  const isVisible = content.classList.contains('visible');
+  content.classList.toggle('visible');
+  el.querySelector('span').textContent = isVisible ? 'Show Hint' : 'Hide Hint';
+}
+
+// ═══════════════════════════════════════════════════════════
+// SQL ENGINE  (AlaSQL — MySQL-compatible)
+// ═══════════════════════════════════════════════════════════
+
+// Drop and recreate a fresh named database for each question
+function initDB(q) {
+  try {
+    if (currentDbName) {
+      alasql('DROP DATABASE IF EXISTS ' + currentDbName);
+    }
+  } catch(e) {}
+
+  currentDbName = 'sqlforge_q' + q.id;
+  try {
+    alasql('CREATE DATABASE IF NOT EXISTS ' + currentDbName);
+    alasql('USE ' + currentDbName);
+    // Split schema on semicolons and run each statement
+    const stmts = q.schema.split(';').map(s => s.trim()).filter(Boolean);
+    for (const stmt of stmts) {
+      alasql(stmt);
+    }
+  } catch (err) {
+    console.warn('Schema init error:', err.message);
+  }
+}
+
+// Run a multi-statement SQL string, return AlaSQL result
+function execSQL(sql) {
+  alasql('USE ' + currentDbName);
+  // AlaSQL handles CTEs and multi-statements via semicolon split
+  // For WITH...SELECT we send the whole block as one statement
+  const stmts = splitStatements(sql);
+  let last = null;
+  for (const stmt of stmts) {
+    last = alasql(stmt);
+  }
+  return last;
+}
+
+// Smart statement splitter — keeps CTEs intact
+function splitStatements(sql) {
+  const results = [];
+  let depth = 0, inStr = false, strChar = '', buf = '';
+  for (let i = 0; i < sql.length; i++) {
+    const ch = sql[i];
+    if (!inStr && (ch === "'" || ch === '"' || ch === '`')) { inStr = true; strChar = ch; }
+    else if (inStr && ch === strChar && sql[i-1] !== '\\') { inStr = false; }
+    else if (!inStr && ch === '(') depth++;
+    else if (!inStr && ch === ')') depth--;
+    buf += ch;
+    if (!inStr && depth === 0 && ch === ';') {
+      const s = buf.trim().replace(/;$/, '').trim();
+      if (s) results.push(s);
+      buf = '';
+    }
+  }
+  const s = buf.trim().replace(/;$/, '').trim();
+  if (s) results.push(s);
+  return results;
+}
+
+// Normalise AlaSQL result → {columns, values} format
+function normaliseResult(raw) {
+  if (!raw || !Array.isArray(raw) || raw.length === 0) return null;
+  // AlaSQL returns array of plain objects
+  if (typeof raw[0] === 'object' && raw[0] !== null) {
+    const columns = Object.keys(raw[0]);
+    const values = raw.map(row => columns.map(c => row[c] ?? null));
+    return { columns, values };
+  }
+  return null;
+}
+
+function runQuery() {
+  if (!currentQuestion) return;
+  const sql = document.getElementById('code-editor').value.trim();
+  if (!sql) return;
+
+  const runBtn = document.getElementById('run-btn');
+  runBtn.innerHTML = '<span class="spinner"></span> Running';
+  runBtn.disabled = true;
+
+  setTimeout(() => {
+    const t0 = performance.now();
+    try {
+      // Reinit to ensure clean data for each run
+      initDB(currentQuestion);
+      const raw = execSQL(sql);
+      const elapsed = (performance.now() - t0).toFixed(1);
+      const result = normaliseResult(raw);
+      if (!result) {
+        showResultsEmpty('Query ran successfully — no rows returned.', elapsed);
+      } else {
+        showResultsTable(result, elapsed);
+      }
+      setBadge('');
+    } catch (err) {
+      showResultsError(err.message);
+      setBadge('error');
+    }
+    runBtn.innerHTML = '▶ Run';
+    runBtn.disabled = false;
+  }, 50);
+}
+
+function submitSolution() {
+  if (!currentQuestion) return;
+  const sql = document.getElementById('code-editor').value.trim();
+  if (!sql) { showToast('Write a query first!', 'error'); return; }
+
+  const t0 = performance.now();
+  let userResult, solutionResult;
+
+  try {
+    initDB(currentQuestion);
+    userResult = normaliseResult(execSQL(sql));
+  } catch (err) {
+    showResultsError('Syntax error: ' + err.message);
+    setBadge('error');
+    setProgress(currentQuestion.id, 'attempted', sql);
+    updateStats();
+    return;
+  }
+
+  try {
+    initDB(currentQuestion);
+    solutionResult = normaliseResult(execSQL(currentQuestion.solution));
+  } catch (err) {
+    solutionResult = userResult; // fallback: accept if ref solution breaks
+  }
+
+  const elapsed = (performance.now() - t0).toFixed(1);
+  const isCorrect = compareResults(userResult, solutionResult);
+
+  if (isCorrect) {
+    if (userResult) showResultsTable(userResult, elapsed);
+    else showResultsEmpty('Query ran successfully.', elapsed);
+    setBadge('pass');
+    setProgress(currentQuestion.id, 'solved', sql);
+    bumpStreak();
+    showToast('✓ Correct! Question marked as solved.', 'success');
+    updateStats();
+    buildSidebar();
+    document.querySelectorAll('.q-item').forEach(el => {
+      el.classList.toggle('active', parseInt(el.dataset.qid) === currentQuestion.id);
+    });
+  } else {
+    if (userResult) showResultsTable(userResult, elapsed);
+    setBadge('fail');
+    setProgress(currentQuestion.id, 'attempted', sql);
+    updateStats();
+    showToast("✗ Output doesn't match. Check the hint!", 'error');
+  }
+}
+
+function compareResults(a, b) {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  if (a.values.length !== b.values.length) return false;
+  const normalize = rows => rows.map(r => r.map(v => String(v ?? '')).join('|')).sort().join('\n');
+  return normalize(a.values) === normalize(b.values);
+}
+
+// ═══════════════════════════════════════════════════════════
+// RESULTS DISPLAY
+// ═══════════════════════════════════════════════════════════
+function showResultsTable(result, elapsed) {
+  const body = document.getElementById('results-body');
+  const { columns, values } = result;
+  const maxDisplay = 50;
+  const shown = values.slice(0, maxDisplay);
+  const extra = values.length > maxDisplay ? `<div style="font-size:11px;color:var(--text-3);margin-top:6px">Showing ${maxDisplay} of ${values.length} rows</div>` : '';
+
+  body.innerHTML = `
+    <div class="results-table-wrap">
+      <table class="results-table">
+        <thead><tr>${columns.map(c => `<th>${escHtml(c)}</th>`).join('')}</tr></thead>
+        <tbody>${shown.map(row =>
+          `<tr>${row.map(v => `<td>${escHtml(String(v ?? 'NULL'))}</td>`).join('')}</tr>`
+        ).join('')}</tbody>
+      </table>
+    </div>
+    ${extra}
+    <div class="exec-time">⚡ ${elapsed}ms · ${values.length} row${values.length !== 1 ? 's' : ''}</div>
+  `;
+}
+
+function showResultsError(msg) {
+  document.getElementById('results-body').innerHTML =
+    `<div class="results-error">❌ ${escHtml(msg)}</div>`;
+}
+
+function showResultsEmpty(msg, elapsed) {
+  document.getElementById('results-body').innerHTML =
+    `<div class="results-success">✓ ${escHtml(msg)}</div><div class="exec-time">⚡ ${elapsed}ms</div>`;
+}
+
+function resetResults() {
+  document.getElementById('results-body').innerHTML = '<div class="results-empty">▷ Run your query to see results</div>';
+  setBadge('');
+}
+
+function setBadge(type) {
+  const badge = document.getElementById('result-badge');
+  badge.className = 'result-badge';
+  if (type === 'pass') { badge.classList.add('pass'); badge.textContent = '✓ Accepted'; }
+  else if (type === 'fail') { badge.classList.add('fail'); badge.textContent = '✗ Wrong Answer'; }
+  else if (type === 'error') { badge.classList.add('error'); badge.textContent = '⚠ Error'; }
+}
+
+// ═══════════════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════════════
+function updateStats() {
+  const progress = getProgress();
+  const patternTotal = typeof QUESTIONS !== 'undefined' ? QUESTIONS.length : 100;
+  const mockTotal = typeof MOCK_QUESTIONS !== 'undefined' ? MOCK_QUESTIONS.length : 55;
+  const total = patternTotal + mockTotal;
+
+  const solved = Object.values(progress).filter(p => p.status === 'solved').length;
+  const pct = total > 0 ? Math.round(solved / total * 100) : 0;
+
+  document.getElementById('solved-count').textContent = solved;
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('streak-count').textContent = getStreak();
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODE SWITCH
+// ═══════════════════════════════════════════════════════════
+function switchMode(mode) {
+  currentMode = mode;
+  document.getElementById('btn-patterns').classList.toggle('active', mode === 'patterns');
+  document.getElementById('btn-mock').classList.toggle('active', mode === 'mock');
+  document.getElementById('search-input').value = '';
+  buildSidebar();
+
+  // Hide question panel if open
+  document.getElementById('welcome-screen').style.display = 'flex';
+  document.getElementById('question-panel').style.display = 'none';
+  document.getElementById('code-panel').style.display = 'none';
+  currentQuestion = null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════
+function switchTab(name, clickedEl) {
+  ['description', 'solution', 'notes'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.panel-tab').forEach(el => el.classList.remove('active'));
+  if (clickedEl) clickedEl.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+// EDITOR
+// ═══════════════════════════════════════════════════════════
+function resetEditor() {
+  document.getElementById('code-editor').value = '';
+  resetResults();
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    runQuery();
+  }
+  // Tab key in editor
+  if (e.key === 'Tab' && document.activeElement.id === 'code-editor') {
+    e.preventDefault();
+    const el = document.getElementById('code-editor');
+    const start = el.selectionStart, end = el.selectionEnd;
+    el.value = el.value.substring(0, start) + '  ' + el.value.substring(end);
+    el.selectionStart = el.selectionEnd = start + 2;
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type === 'success' ? 'success' : 'error-toast');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Init on load
+window.addEventListener('load', () => {
+  // Ensure tab-description is visible by default
+  document.getElementById('tab-description').style.display = 'block';
+  document.getElementById('tab-solution').style.display = 'none';
+  document.getElementById('tab-notes').style.display = 'none';
+  initSQL();
+});
+</script>
+</body>
+</html>
