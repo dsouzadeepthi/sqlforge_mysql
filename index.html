@@ -1083,6 +1083,32 @@ html, body {
 
 <script>
 // ═══════════════════════════════════════════════════════════
+// PATTERNS — defined here so questions.js doesn't need to
+// ═══════════════════════════════════════════════════════════
+const PATTERNS = [
+  { id:1,  name:"Top N per Group",            icon:"🏆" },
+  { id:2,  name:"Deduplication",              icon:"🧹" },
+  { id:3,  name:"Running Total",              icon:"📈" },
+  { id:4,  name:"Moving Average",             icon:"〰️" },
+  { id:5,  name:"Next / Previous Row",        icon:"↕️" },
+  { id:6,  name:"Day-1 Retention",            icon:"🔄" },
+  { id:7,  name:"Sessionization",             icon:"📦" },
+  { id:8,  name:"Consecutive Streaks",        icon:"🔥" },
+  { id:9,  name:"Gaps Between Events",        icon:"⏱️" },
+  { id:10, name:"First / Last Value",         icon:"🎯" },
+  { id:11, name:"Percent of Total",           icon:"🥧" },
+  { id:12, name:"Ranking Variants",           icon:"🎖️" },
+  { id:13, name:"Conditional Aggregation",    icon:"🔀" },
+  { id:14, name:"Funnel Analysis",            icon:"🔽" },
+  { id:15, name:"Self Join for Pairs",        icon:"🤝" },
+  { id:16, name:"Anti Join (NOT EXISTS)",     icon:"🚫" },
+  { id:17, name:"Cohort Analysis",            icon:"👥" },
+  { id:18, name:"Window Filtering",           icon:"🪟" },
+  { id:19, name:"All Conditions Must Hold",   icon:"✅" },
+  { id:20, name:"Rolling Retention/Activity", icon:"📅" }
+];
+
+// ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
 let SQL  = null;   // sql.js module
@@ -1544,6 +1570,18 @@ function switchMode(mode) {
 function buildSidebar(filter = '') {
   const list = document.getElementById('sidebar-list');
   list.innerHTML = '';
+
+  // Guard: questions.js not loaded yet or variable names wrong
+  if (typeof QUESTIONS === 'undefined' || typeof MOCK_QUESTIONS === 'undefined') {
+    list.innerHTML = `<div style="padding:20px;color:var(--red);font-size:12px;line-height:1.8">
+      ❌ <strong>questions.js not loading.</strong><br><br>
+      Make sure your file defines:<br>
+      <code style="color:var(--cyan)">const QUESTIONS = [...]</code><br>
+      <code style="color:var(--cyan)">const MOCK_QUESTIONS = [...]</code><br><br>
+      Check the browser console for errors.
+    </div>`;
+    return;
+  }
   const progress = getProgress();
   const filterLow = filter.toLowerCase();
 
