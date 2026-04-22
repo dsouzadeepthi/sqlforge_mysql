@@ -1175,6 +1175,55 @@ async function initSQL() {
   }
 }
 
+// Handles DATE_ADD/DATE_SUB with arbitrarily nested parens in the INTERVAL expression.
+// Regex alone can't do this reliably — we walk the string char by char.
+function convertDateInterval(sql, fnName, sign) {
+  const upper = fnName.toUpperCase();
+  const re = new RegExp(upper + '\\s*\\(', 'gi');
+  let result = '';
+  let lastIndex = 0;
+  let m;
+
+  while ((m = re.exec(sql)) !== null) {
+    result += sql.slice(lastIndex, m.index);
+
+    // Walk forward from after the opening paren to find the balanced close
+    let depth = 1, i = m.index + m[0].length;
+    while (i < sql.length && depth > 0) {
+      if (sql[i] === '(') depth++;
+      else if (sql[i] === ')') depth--;
+      i++;
+    }
+    // Full content inside DATE_ADD(...) or DATE_SUB(...)
+    const inner = sql.slice(m.index + m[0].length, i - 1);
+
+    // Split on the LAST top-level comma before INTERVAL keyword
+    // inner = "expr, INTERVAL <n_expr> UNIT"
+    const intervalMatch = inner.match(/^([\s\S]+),\s*INTERVAL\s+([\s\S]+?)\s+(DAY|MONTH|HOUR|MINUTE|SECOND|YEAR)S?\s*$/i);
+
+    if (intervalMatch) {
+      const expr = intervalMatch[1].trim();
+      const n    = intervalMatch[2].trim();
+      const unit = intervalMatch[3].toLowerCase();
+      // Literal number → simple form: DATE(expr, '+5 days')
+      if (/^\d+$/.test(n)) {
+        result += `DATE(${expr}, '${sign}${n} ${unit}s')`;
+      } else {
+        // Dynamic expression → concat form: DATE(expr, '+' || (expr) || ' days')
+        result += `DATE(${expr}, '${sign}' || (${n}) || ' ${unit}s')`;
+      }
+    } else {
+      // Couldn't parse — leave as-is
+      result += m[0] + inner + ')';
+    }
+
+    lastIndex = i;
+    re.lastIndex = i;
+  }
+  result += sql.slice(lastIndex);
+  return result;
+}
+
 // ═══════════════════════════════════════════════════════════
 // MySQL → SQLite TRANSLATION LAYER
 // Users write MySQL; we translate silently before execution.
@@ -1182,13 +1231,10 @@ async function initSQL() {
 function mysqlToSqlite(sql) {
   let s = sql;
 
-  // DATE_ADD(expr, INTERVAL N DAY/MONTH/HOUR...)
-  s = s.replace(/DATE_ADD\s*\(\s*([^,]+),\s*INTERVAL\s+(\([^)]+\)|[\w.]+)\s+(DAY|MONTH|HOUR|MINUTE|SECOND|YEAR)S?\s*\)/gi,
-    (_, expr, n, unit) => "DATE(" + expr.trim() + ", '+' || (" + n.trim() + ") || ' " + unit.toLowerCase() + "s')");
-
-  // DATE_SUB(expr, INTERVAL N DAY/MONTH/HOUR...)
-  s = s.replace(/DATE_SUB\s*\(\s*([^,]+),\s*INTERVAL\s+(\([^)]+\)|[\w.]+)\s+(DAY|MONTH|HOUR|MINUTE|SECOND|YEAR)S?\s*\)/gi,
-    (_, expr, n, unit) => "DATE(" + expr.trim() + ", '-' || (" + n.trim() + ") || ' " + unit.toLowerCase() + "s')");
+  // DATE_ADD / DATE_SUB with INTERVAL — handles nested parens in the expression
+  // e.g. DATE_SUB(col, INTERVAL (ROW_NUMBER() OVER (PARTITION BY x ORDER BY y)-1) DAY)
+  s = convertDateInterval(s, 'DATE_ADD', '+');
+  s = convertDateInterval(s, 'DATE_SUB', '-');
 
   // Simplify literal: DATE(x, '+' || (5) || ' days') -> DATE(x, '+5 days')
   s = s.replace(/DATE\(([^,]+),\s*'([+-])'\s*\|\|\s*\((\d+)\)\s*\|\|\s*'\s*(days?|months?|hours?|years?)\s*'\)/gi,
